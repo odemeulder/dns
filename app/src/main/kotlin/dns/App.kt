@@ -146,6 +146,15 @@ fun parseRecord(buffer: ByteArray): DnsRecord {
     buffer.copyInto(data, 0, ptr+1, ptr+1+dataLen)
     return DnsRecord(encodeDnsName(name), type_, class_, ttl, data)
 }
+fun parseRecord(reader: ByteArrayReader): DnsRecord {
+    val name = decodeDnsName(reader)
+    val type_ = readTwoBytesToInt(reader)
+    val class_ = readTwoBytesToInt(reader)
+    val ttl = readFourBytesToInt(reader)
+    val dataLen = readTwoBytesToInt(reader)
+    val data: ByteArray = reader.read(dataLen)
+    return DnsRecord(encodeDnsName(name), type_, class_, ttl, data)
+}
 
 // returns the DnsName and a pointer to the index of the ByteArray where the reading stopped.
 fun decodeDnsName(buffer: ByteArray, offset: Int): Pair<String, Int> {
@@ -175,16 +184,9 @@ fun decodeDnsName(buffer: ByteArray, offset: Int): Pair<String, Int> {
 } 
 
 fun decodeCompressedName(buffer: ByteArray, offset: Int, length: Int): Pair<String, Int> {
-    // println("length: $length.toString(2)")
-    // println("offset: $offset")
-    // println("byte: ${"%02x".format(buffer[offset])}")
-    // println("byte: ${"%02x".format(buffer[offset+1])}")
-    // println((length and 0x3f).toByte())
     // 0x3f is 0011 1111, using 'and' to take the bottom 6th bits and combine with the next byte
     val pointerBytes = byteArrayOf((length and 0x3f).toByte() , buffer[offset + 1])
-    // println(pointerBytes.toHex())
     val pointer = readTwoBytesToInt(pointerBytes, 0)
-    // println("pointer: $pointer")
     val (name, _) = decodeDnsName(buffer, pointer)
     return Pair(name, offset+1)
 }
@@ -192,7 +194,8 @@ fun decodeCompressedName(buffer: ByteArray, offset: Int, length: Int): Pair<Stri
 // returns the DnsName and a pointer to the index of the ByteArray where the reading stopped.
 fun decodeDnsName(reader: ByteArrayReader): String {
     val rv: ArrayList<String> = arrayListOf()
-    var length = reader.readOne().toInt() and 0xff
+    var b = reader.readOne()
+    var length = b.toInt() and 0xff
     while (length != 0) {
         // c0 is 0011 1111
         if (length and 0xc0 != 0x00) {

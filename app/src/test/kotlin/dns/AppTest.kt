@@ -12,6 +12,9 @@ class AppTest {
         assertNotNull(classUnderTest.greeting, "app should have a greeting")
     }
 
+    // helper to convert a hex string to a bytearray
+    fun hexToByteArray(hexString: String): ByteArray = hexString.chunked(2).map({ it.toInt(16).toByte() }).toByteArray()
+
     @Test fun testBuildQuery() {
         var query = buildQuery("www.example.com", TYPE_A)
         val expected = "82980100000100000000000003777777076578616d706c6503636f6d0000010001"
@@ -44,14 +47,6 @@ class AppTest {
         }
     }
 
-    @Test fun testParseHeader_old() {
-        val buffer = hexToByteArray("2e7981800001000100000000")
-        val header = parseHeader(buffer)
-        assertEquals(1, header.numAnswers)
-        assertEquals(1, header.numQuestions)
-        assertEquals(33152, header.flags)
-    }
-
     @Test fun testParseHeader() {
         val buffer = hexToByteArray("2e7981800001000100000000")
         val reader = ByteArrayReader(buffer)
@@ -61,20 +56,12 @@ class AppTest {
         assertEquals(33152, header.flags)
     }
 
-
     @Test fun testDecodeDomainName() {
         val buffer = hexToByteArray("03777777076578616d706c6503636f6d00")
+        val reader = ByteArrayReader(buffer)
         val expected = "www.example.com"
-        val (actual, _) = decodeDnsName(buffer, 0)
+        val actual = decodeDnsName(reader)
         assertEquals(expected, actual)
-    }
-
-    @Test fun testParseQuestion_old() {
-        val buffer = hexToByteArray("03777777076578616d706c6503636f6d0000010001")
-        val question = parseQuestion(buffer)
-        assertEquals("www.example.com", decodeDnsName(question.name, 0).first)
-        assertEquals(1, question.type_)
-        assertEquals(1, question.class_)
     }
 
     @Test fun testParseQuestion() {
@@ -86,10 +73,11 @@ class AppTest {
         assertEquals(1, question.class_)
     }
 
-
     @Test fun testDecodeCompressedDomainName() {
         val buffer = hexToByteArray("23138180000100010000000003777777076578616d706c6503636f6d0000010001c00c00010001000051a500045db8d822000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000")
-        val (name, _) = decodeDnsName(buffer, 33)
+        val reader = ByteArrayReader(buffer)
+        reader.seek(33) // compressed name starts at byte 33 (0xc0)
+        val name = decodeDnsName(reader)
         assertEquals("www.example.com", name)
     }
 
@@ -102,6 +90,28 @@ class AppTest {
     //     assertEquals(21174, record.ttl)
     // }
 
-    fun hexToByteArray(hexString: String): ByteArray = hexString.chunked(2).map({ it.toInt(16).toByte() }).toByteArray()
+
+
+    @Test fun testParseHeader_old() {
+        val buffer = hexToByteArray("2e7981800001000100000000")
+        val header = parseHeader(buffer)
+        assertEquals(1, header.numAnswers)
+        assertEquals(1, header.numQuestions)
+        assertEquals(33152, header.flags)
+    }
+    @Test fun testDecodeDomainName_old() {
+        val buffer = hexToByteArray("03777777076578616d706c6503636f6d00")
+        val expected = "www.example.com"
+        val (actual, _) = decodeDnsName(buffer, 0)
+        assertEquals(expected, actual)
+    }
+    @Test fun testParseQuestion_old() {
+        val buffer = hexToByteArray("03777777076578616d706c6503636f6d0000010001")
+        val question = parseQuestion(buffer)
+        assertEquals("www.example.com", decodeDnsName(question.name, 0).first)
+        assertEquals(1, question.type_)
+        assertEquals(1, question.class_)
+    }
+
 
 }
