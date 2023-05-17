@@ -223,6 +223,17 @@ fun decodeCompressedName(reader: ByteArrayReader, length: Int): String {
     return name
 }
 
+fun parsePacket(reader: ByteArrayReader): DnsPacket {
+    val packet = DnsPacket(DnsHeader(1, 1))
+    val header = parseHeader(reader)
+    packet.header = header
+    for (i in 0 until header.numQuestions) packet.questions.add(parseQuestion(reader))
+    for (i in 0 until header.numAnswers) packet.answers.add(parseRecord(reader))
+    for (i in 0 until header.numAuthorities) packet.authorities.add(parseRecord(reader))
+    for (i in 0 until header.numAdditionals) packet.additionals.add(parseRecord(reader))
+    return packet
+}
+
 fun testQuery() {
     var query = buildQuery("www.example.com", TYPE_A)
     println(query.toHex());

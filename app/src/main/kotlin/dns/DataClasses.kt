@@ -25,8 +25,8 @@ data class DnsRecord(
 
 data class DnsPacket(
   var header: DnsHeader,
-  var questions: List<DnsQuestion>,
-  var answers: List<DnsRecord>,
-  var authorities: List<DnsRecord>,
-  var additionals: List<DnsRecord>,
-)
+  var questions: ArrayList<DnsQuestion> = arrayListOf(),
+  var answers: ArrayList<DnsRecord> = arrayListOf(),
+  var authorities: ArrayList<DnsRecord> = arrayListOf(),
+  var additionals: ArrayList<DnsRecord> = arrayListOf(),
+) 
