@@ -109,6 +109,7 @@ class AppTest {
         assertEquals(1, packet.answers[0].type_)
         assertEquals(1, packet.answers[0].class_)
         assertEquals(20164, packet.answers[0].ttl)
+        println(packet)
     }
 
 
