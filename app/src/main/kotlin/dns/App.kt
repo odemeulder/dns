@@ -19,8 +19,8 @@ fun main() {
 
 
 fun testQuery() {
-    var query = buildQuery("www.example.com", TYPE_A)
-    println(query.toHex());
+    var query = buildQuery("example.com", TYPE_A)
+    // println(query.toHex());
     var socket = DatagramSocket()
     var address = InetAddress.getByName("8.8.8.8")
     var packet: DatagramPacket = DatagramPacket(query, query.size, address, DNS_PORT);
@@ -28,7 +28,10 @@ fun testQuery() {
     var buffer = ByteArray(1024)
     var recvPacket = DatagramPacket(buffer, 1024)
     socket.receive(recvPacket)
-    println(buffer.toHex())
+    // println(buffer.toHex())
+    val dnsPacket = parsePacket(ByteArrayReader(buffer))
+    // println(dnsPacket)
+    println(ipToString(dnsPacket.answers[0].data))
 }
 
 

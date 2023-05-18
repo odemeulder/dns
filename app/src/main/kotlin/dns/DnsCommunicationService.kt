@@ -216,7 +216,7 @@ fun decodeCompressedName(reader: ByteArrayReader, length: Int): String {
 }
 
 fun parsePacket(reader: ByteArrayReader): DnsPacket {
-    val packet = DnsPacket(DnsHeader(1, 1))
+  val packet = DnsPacket(DnsHeader(1, 1))
     val header = parseHeader(reader)
     packet.header = header
     for (i in 0 until header.numQuestions) packet.questions.add(parseQuestion(reader))
@@ -224,4 +224,8 @@ fun parsePacket(reader: ByteArrayReader): DnsPacket {
     for (i in 0 until header.numAuthorities) packet.authorities.add(parseRecord(reader))
     for (i in 0 until header.numAdditionals) packet.additionals.add(parseRecord(reader))
     return packet
+}
+
+fun ipToString(ip: ByteArray): String {
+  return ip.map({ it.toInt() and 0xff}).joinToString(".")
 }

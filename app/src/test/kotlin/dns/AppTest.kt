@@ -109,7 +109,12 @@ class AppTest {
         assertEquals(1, packet.answers[0].type_)
         assertEquals(1, packet.answers[0].class_)
         assertEquals(20164, packet.answers[0].ttl)
-        println(packet)
+        assertEquals("93.184.216.34", ipToString(packet.answers[0].data))
+    }
+
+    @Test fun testIpToString() {
+        val buffer = hexToByteArray("5db8d822")
+        assertEquals("93.184.216.34", ipToString(buffer))
     }
 
 
