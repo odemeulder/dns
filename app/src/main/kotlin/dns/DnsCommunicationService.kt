@@ -3,6 +3,14 @@ package dns
 import kotlin.random.Random
 
 val TYPE_A = 1
+val TYPE_NS = 2
+val TYPE_CNAME = 5
+val TYPE_SOA = 6
+val TYPE_PTR = 12
+val TYPE_MX = 15
+val TYPE_TXT = 16
+val TYPE_AAAA = 28
+
 val CLASS_IN = 1
 val DNS_PORT = 53
 
@@ -124,11 +132,11 @@ fun encodeDnsName(domainName: String): ByteArray {
 
 public fun buildQuery(domainName: String, recordType: Int): ByteArray {
     var rv: ByteArray = byteArrayOf()
-    // sets the flags to “recursion desired”. The encoding for the flags is defined in section 4.1.1 of RFC 1035. 
-    val flags: Int = 1 shl 8 
+    // The encoding for the flags is defined in section 4.1.1 of RFC 1035. 
+    val flags: Int = 0
     val id_ = Random.nextInt(0, 65536)
     val header = DnsHeader(id_, flags, numQuestions = 1)
-    val question = DnsQuestion(encodeDnsName(domainName), CLASS_IN, recordType)
+    val question = DnsQuestion(encodeDnsName(domainName), recordType, CLASS_IN)
     rv += headerToBytes(header)
     rv += questionToBytes(question)
     return rv

@@ -9,7 +9,7 @@ import kotlin.random.Random
 class AppTest {
     @Test fun appHasAGreeting() {
         val classUnderTest = App()
-        assertNotNull(classUnderTest.greeting, "app should have a greeting")
+        assertNotNull(classUnderTest.name, "app should have a name")
     }
 
     // helper to convert a hex string to a bytearray
@@ -17,7 +17,7 @@ class AppTest {
 
     @Test fun testBuildQuery() {
         var query = buildQuery("www.example.com", TYPE_A)
-        val expected = "82980100000100000000000003777777076578616d706c6503636f6d0000010001"
+        val expected = "82980000000100000000000003777777076578616d706c6503636f6d0000010001"
         assertEquals(expected.slice(4..expected.length-1), 
             query.toHex().slice(4..expected.length-1),
             )

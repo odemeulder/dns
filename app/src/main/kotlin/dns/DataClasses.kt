@@ -13,7 +13,9 @@ data class DnsQuestion(
     var name: ByteArray,
     var type_: Int,
     var class_: Int
-)
+) {
+    override fun toString(): String = "DnsQuestion(name=${String(name)}, type_=$type_, class_=$class_)"
+}
 
 data class DnsRecord(
     var name: ByteArray,
@@ -21,7 +23,14 @@ data class DnsRecord(
     var class_: Int,
     var ttl: Int,
     var data: ByteArray,
-)
+) {
+    override fun toString(): String {
+        var dataString: String
+        if (data.size == 4) dataString = ipToString(data) 
+        else dataString = String(data) 
+        return "DnsRecord(name=[${String(name)}], type_=$type_, class_=$class_, ttl=$ttl, data=[$dataString])"
+    }
+}
 
 data class DnsPacket(
   var header: DnsHeader,
@@ -29,4 +38,7 @@ data class DnsPacket(
   var answers: ArrayList<DnsRecord> = arrayListOf(),
   var authorities: ArrayList<DnsRecord> = arrayListOf(),
   var additionals: ArrayList<DnsRecord> = arrayListOf(),
-) 
+) {
+    override fun toString(): String = "$header\nquestions=$questions\nanswers=$answers\nauthorities=$authorities\nadditionals=$additionals"
+}
+
