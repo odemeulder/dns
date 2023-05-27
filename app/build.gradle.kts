@@ -25,9 +25,11 @@ dependencies {
 
     // Use the JUnit 5 integration.
     testImplementation("org.junit.jupiter:junit-jupiter-engine:5.9.1")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:4.1.0")
 
     // This dependency is used by the application.
     implementation("com.google.guava:guava:31.1-jre")
+    implementation("org.jetbrains.kotlinx:kotlinx-cli:0.3.5")
 }
 
 // Apply a specific Java toolchain to ease working on different environments.

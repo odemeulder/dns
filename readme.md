@@ -7,5 +7,5 @@ Implement DNS in a weekend. I pretty much followed the same approach as Julia Ev
 ## to do
 * CNAME
 * pass arguments
-* caching
+* test resolver
 * socket server

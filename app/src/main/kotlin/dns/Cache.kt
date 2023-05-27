@@ -5,7 +5,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 interface Cache {
   fun get(key: String): String?
-  fun set(key: String, value: String, ttl: Long = 36000000)
+  fun set(key: String, value: String, ttl: Int = 36000000)
 }
 
 class TimedCache() : Cache {
@@ -19,11 +19,11 @@ class TimedCache() : Cache {
     return timedEntry.value
   }
 
-  override fun set(key: String, value: String, ttl: Long) { 
+  override fun set(key: String, value: String, ttl: Int) { 
     hashMap.set(key, TimedEntry(value, ttl)) 
   }
 
-  private class TimedEntry(val value: String, val maxDurationInSeconds: Long) {
+  private class TimedEntry(val value: String, val maxDurationInSeconds: Int) {
     private val createTime: Long = now()
     fun isExpired(): Boolean = (now() - createTime) > (maxDurationInSeconds * 1000)
     private fun now() = System.currentTimeMillis()

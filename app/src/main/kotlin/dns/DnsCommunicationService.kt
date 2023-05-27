@@ -70,6 +70,13 @@ fun readTwoBytesToInt(reader: ByteArrayReader): Int {
     return (((reader.readOne().toInt() and 0xff) shl 8)) or ((reader.readOne().toInt() and 0xff))
 }
 
+fun writeFourBytesToBuffer(buffer: ByteArray, offset: Int, data: Int) {
+    buffer[offset] = (data shr 24).toByte()
+    buffer[offset+1] = (data shr 16).toByte()
+    buffer[offset+2] = (data shr 8).toByte()
+    buffer[offset+3] = (data shr 0).toByte()
+}
+
 fun readFourBytesToInt(buffer: ByteArray, offset: Int): Int {
     // some bizarre logic here, to read big endian int
     // first byte, shift left 8
@@ -150,7 +157,7 @@ fun parseRecord(buffer: ByteArray): DnsRecord {
     val dataLen = readTwoBytesToInt(buffer, ptr+9)
     val data: ByteArray = byteArrayOf()
     buffer.copyInto(data, 0, ptr+1, ptr+1+dataLen)
-    return DnsRecord(encodeDnsName(name), type_, class_, ttl, data)
+    return DnsRecord(encodeDnsName(name), type_, class_, ttl, data, "") // todo
 }
 fun parseRecord(reader: ByteArrayReader): DnsRecord {
     val name = decodeDnsName(reader)
@@ -158,8 +165,31 @@ fun parseRecord(reader: ByteArrayReader): DnsRecord {
     val class_ = readTwoBytesToInt(reader)
     val ttl = readFourBytesToInt(reader)
     val dataLen = readTwoBytesToInt(reader)
+    val location = reader.tell()
     val data: ByteArray = reader.read(dataLen)
-    return DnsRecord(encodeDnsName(name), type_, class_, ttl, data)
+    var alias: String = "" 
+    if ( type_  == TYPE_CNAME ) {
+        reader.seek(location)
+        alias =  decodeDnsName(reader)
+    }
+    return DnsRecord(encodeDnsName(name), type_, class_, ttl, data, alias)
+}
+
+fun recordToBytes(record: DnsRecord): ByteArray {
+    var namesize = record.name.size
+    var buffer = ByteArray(namesize + 14)
+    var offset = namesize
+    record.name.copyInto(buffer, 0, 0, offset)
+    writeTwoBytesToBuffer(buffer, offset, record.type_)
+    offset += 2
+    writeTwoBytesToBuffer(buffer, offset, record.class_)
+    offset += 2
+    writeFourBytesToBuffer(buffer, offset, record.ttl)
+    offset += 4
+    writeTwoBytesToBuffer(buffer, offset, 4) // len is 4
+    offset += 2
+    record.data.copyInto(buffer, offset, 0, 4) // read bytes 0, 1, 2, and 3 into buffer, starting at offset namesize + 8
+    return buffer
 }
 
 // returns the DnsName and a pointer to the index of the ByteArray where the reading stopped.
@@ -191,7 +221,7 @@ fun decodeCompressedName(buffer: ByteArray, offset: Int, length: Int): Pair<Stri
     return Pair(name, offset+1)
 }
 
-// returns the DnsName and a pointer to the index of the ByteArray where the reading stopped.
+// returns the DnsName 
 fun decodeDnsName(reader: ByteArrayReader): String {
     val rv: ArrayList<String> = arrayListOf()
     var b = reader.readOne()
@@ -237,3 +267,5 @@ fun parsePacket(reader: ByteArrayReader): DnsPacket {
 fun ipToString(ip: ByteArray): String {
   return ip.map({ it.toInt() and 0xff}).joinToString(".")
 }
+
+fun stringToIp(s: String): ByteArray = s.split('.').map({ it.toInt().toByte() }).toByteArray()

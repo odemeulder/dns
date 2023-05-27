@@ -1,12 +1,16 @@
 package dns
 
-class Resolver() {
+class Resolver(val cache: Cache, val udpClient: UdpInterface) {
 
-  private fun getAnswer(packet: DnsPacket): ByteArray? {
+  private val rootNs = "198.41.0.4"
+
+  private fun getAnswer(packet: DnsPacket): DnsRecord? {
     // return the first A record in the answers section
     for (record in packet.answers) 
-      if (record.type_ == TYPE_A) 
-        return record.data
+      when (record.type_) {
+        TYPE_A -> return record
+        TYPE_CNAME -> return resolveToDnsRecord(record.alias!!)
+      }
     return null
   }
 
@@ -26,21 +30,34 @@ class Resolver() {
     return null
   }
 
-  fun resolve(domainName: String, recordType: Int = TYPE_A): String {
-    val rootNs = "198.41.0.4"
+  private fun resolveToDnsRecord(domainName: String, recordType: Int = TYPE_A): DnsRecord {
     var nameserver = rootNs
     while (true) {
       print("Querying $nameserver for $domainName\n")
-      var response = sendQuery(nameserver, domainName, recordType)
-      getAnswer(response)?.let {
-        return ipToString(it)
+      var query = buildQuery(domainName, recordType)
+      println("query $query")
+      var response = udpClient.sendQuery(nameserver, query)
+      println("response $response")
+      val dnsPacket = parsePacket(ByteArrayReader(response))
+      println("dnsPacket $dnsPacket")
+      getAnswer(dnsPacket)?.let {
+        val returnValue = ipToString(it.data)
+        cache.set(domainName, returnValue, it.ttl)
+        return it
       }
-        ?: getNameserverIp(response)?.let {
+        ?: getNameserverIp(dnsPacket)?.let {
           nameserver = ipToString(it)
         }
-          ?: getNameserver(response)?. let {
+          ?: getNameserver(dnsPacket)?. let {
             nameserver = resolve(it, TYPE_A)
           }
     }
+
+  }
+
+  fun resolve(domainName: String, recordType: Int = TYPE_A): String {
+    cache.get(domainName) ?. let { return it }
+    val record = resolveToDnsRecord(domainName, recordType)
+    return ipToString(record.data)
   }
 }

@@ -1,41 +1,52 @@
 package dns
 
-import java.nio.charset.StandardCharsets
-import java.net.DatagramSocket
-import java.net.DatagramPacket
-import java.net.InetAddress
+import kotlinx.cli.*
 
 class App {
     val name: String
         get() {
             return "Olivier's DNS resolver"
         }
+
 }
 
-fun main() {
+enum class Mode {
+    server,
+    client,
+    resolver,
+}
+
+fun main(args: Array<String>) {
     println(App().name)
-    // sendQuery("216.239.32.10", "google.com", TYPE_A)
-    val resolver = Resolver()
-    val ip = resolver.resolve("invitationconsultants.com")
-    println("ip is $ip")
+
+    val parser = ArgParser("example")
+    val mode by parser.argument(ArgType.Choice<Mode>(), description = "Mode")
+    val input by parser.option(ArgType.String, shortName = "d", description = "Domain name to resolve.")
+    val host by parser.option(ArgType.String, shortName = "s", description = "Host to query.")
+    val port by parser.option(ArgType.String, shortName = "p", description = "Port to query.").default(DNS_PORT.toString())
+    parser.parse(args)
+
+    when (mode) {
+        Mode.client -> { 
+            val client = Client(host ?: "localhost", port.toInt())
+            val dnsPacket = client.sendQuery(input ?: "example.com", TYPE_A)
+            println(dnsPacket)
+        }
+        Mode.server -> {
+            println("Starting dns server on port $port")
+            val server = Server(Resolver(TimedCache(), UdpClient(DNS_PORT)))
+            server.listen()
+        }
+        Mode.resolver -> {
+            val resolver = Resolver(TimedCache(), UdpClient(DNS_PORT))
+            val ip = resolver.resolve(input ?: "example.com")
+            println("ip is $ip")
+        }
+    }
+
 }
 
 
-fun sendQuery(ipAddress: String, domainName: String, recordType: Int): DnsPacket {
-    var query = buildQuery(domainName, recordType)
-    // println(query.toHex());
-    var socket = DatagramSocket()
-    var address = InetAddress.getByName(ipAddress)
-    var packet: DatagramPacket = DatagramPacket(query, query.size, address, DNS_PORT);
-    socket.send(packet)
-    var buffer = ByteArray(1024)
-    var recvPacket = DatagramPacket(buffer, 1024)
-    socket.receive(recvPacket)
-    // println(buffer.toHex())
-    val dnsPacket = parsePacket(ByteArrayReader(buffer))
-    // println(dnsPacket)
-    //println(ipToString(dnsPacket.answers[0].data))
-    return dnsPacket
-}
+
 
 
