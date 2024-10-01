@@ -261,6 +261,7 @@ fun parsePacket(reader: ByteArrayReader): DnsPacket {
     for (i in 0 until header.numAnswers) packet.answers.add(parseRecord(reader))
     for (i in 0 until header.numAuthorities) packet.authorities.add(parseRecord(reader))
     for (i in 0 until header.numAdditionals) packet.additionals.add(parseRecord(reader))
+    Thread.sleep(1000)
     return packet
 }
 
@@ -269,3 +270,4 @@ fun ipToString(ip: ByteArray): String {
 }
 
 fun stringToIp(s: String): ByteArray = s.split('.').map({ it.toInt().toByte() }).toByteArray()
+

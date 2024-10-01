@@ -55,6 +55,7 @@ class Resolver(val cache: Cache, val udpClient: UdpInterface) {
 
   }
 
+  // Recursively resolve a domain name to an IP
   fun resolve(domainName: String, recordType: Int = TYPE_A): String {
     cache.get(domainName) ?. let { return it }
     val record = resolveToDnsRecord(domainName, recordType)

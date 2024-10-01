@@ -25,5 +25,4 @@ Query the server to resolve a domain name
 ## to do
 * CNAME <in progress>
 * pass arguments <in progress>
-* test resolver <in progress>
 * socket server <in progress>

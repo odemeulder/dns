@@ -8,7 +8,7 @@ interface UdpInterface {
   fun sendQuery(ipAddress: String, query: ByteArray): ByteArray
 }
 
-class UdpClient(val port: Int) : UdpInterface {
+open class UdpClient(val port: Int) : UdpInterface {
 
   override fun sendQuery(ipAddress: String, query: ByteArray): ByteArray {
     var socket = DatagramSocket()

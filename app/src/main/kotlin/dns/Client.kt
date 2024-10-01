@@ -6,12 +6,10 @@ import java.net.InetAddress
 
 class Client(val host: String = "8.8.8.8", val port: Int = DNS_PORT) {
 
-    // send a single query
+    // send a single DNS query to a DNS server and return the packet
   fun sendQuery(domainName: String, recordType: Int): DnsPacket {
     var query = buildQuery(domainName, recordType)
-    println(query)
     var socket = DatagramSocket()
-    println(host)
     var address = InetAddress.getByName(host)
     var packet: DatagramPacket = DatagramPacket(query, query.size, address, port);
     socket.send(packet)
